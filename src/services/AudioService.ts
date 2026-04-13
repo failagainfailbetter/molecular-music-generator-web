@@ -21,23 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
 */
-import type Tone from "tone/build/esm/index.d";
 import Composition from "../model/Composition";
 import Note from "../model/Note";
 import { getMeasureDurationInSeconds } from "../utils/AudioMath";
 import { getFrequency } from "../utils/PitchUtil";
 
 const initializeCallbacks: Array<Function> = [];
-let ToneAPI: typeof Tone = null;
+// Use CommonJS require so the module resolves correctly under both the CRA
+// development server and an Electron file:// build (avoids ESM / .default issues).
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const _toneModule: any = require("tone");
+let ToneAPI: any = _toneModule?.default ?? _toneModule;
 let initialized: boolean = false;
 
-const parts: Array<Tone.Part> = [];
-const envelopes: Array<Tone.AmplitudeEnvelope> = [];
-const oscillators: Array<Tone.Oscillator> = [];
-let sequence: Tone.Sequence = null;
-let limiter: Tone.Limiter = null;
-let eq: Tone.EQ3 = null;
-let comp: Tone.Compressor = null;
+const parts: Array<any> = [];
+const envelopes: Array<any> = [];
+const oscillators: Array<any> = [];
+let sequence: any = null;
+let limiter: any = null;
+let eq: any = null;
+let comp: any = null;
 let notes: Array<Note> = [];
 
 const MAX_POLYPHONY = 30;
@@ -47,8 +50,7 @@ const MAX_POLYPHONY = 30;
  * In this method we will automatically start the context when any
  * kind of interaction has occurred in the document.
  */
-export const init = async () => {
-    ToneAPI = ( await import( "tone" ) as typeof Tone );
+export const init = (): void => {
     const events: Array<string> = [ "click", "touchstart", "keydown" ];
     const handler = async () => {
         await ToneAPI.start();
@@ -66,14 +68,30 @@ export const init = async () => {
 };
 
 /**
+ * Explicitly unlock the AudioContext. Call this on any direct user gesture
+ * (e.g. pressing the Play button) to guarantee audio works in Electron
+ * where the auto-detection of user interactions may not fire reliably.
+ */
+export const ensureStarted = async (): Promise<void> => {
+    if ( initialized ) {
+        return;
+    }
+    await ToneAPI.start();
+    initialized = true;
+    while ( initializeCallbacks.length ) {
+        initializeCallbacks.shift()();
+    }
+};
+
+/**
  * Start playback of the composition
  */
-export const play = (): typeof Tone.Transport => ToneAPI.Transport.start();
+export const play = (): void => { ToneAPI.Transport.start(); };
 
 /**
  * Halts playback of the composition
  */
-export const pause = (): typeof Tone.Transport => ToneAPI.Transport.pause();
+export const pause = (): void => { ToneAPI.Transport.pause(); };
 
 /**
  * Jump to a specific measure in the composition
@@ -130,7 +148,7 @@ export const setupCompositionPlayback = ( composition: Composition, sequencerCal
 
     // set a callback that enqueues the next measure on the first beat of a new bar
 
-    sequence = new ToneAPI.Sequence(( time ) => {
+    sequence = new ToneAPI.Sequence(( time: any ) => {
         const [ bars, beats, sixteenths ] = ( ToneAPI.Transport.position as string ).split( ":" ).map( parseFloat );
         sequencerCallback?.(
             bars, beats, sixteenths, composition.totalMeasures, time
@@ -157,7 +175,7 @@ function stopPlayingParts(): void {
     resetActors( oscillators );
 }
 
-function resetActors( actorList: Array<Tone.ToneEvent|Tone.Envelope|Tone.Oscillator> ): void {
+function resetActors( actorList: Array<any> ): void {
     for ( const actor of actorList ) {
         if ( actor instanceof ToneAPI.Oscillator ) {
             actor.stop();
@@ -177,7 +195,7 @@ function enqueueNextMeasure( measureNum: number, delta: number = 0 ): void {
     if ( notesToEnqueue.length > MAX_POLYPHONY ) {
         notesToEnqueue.splice( 0, MAX_POLYPHONY );
     }
-    parts.push( new ToneAPI.Part(( time, value ) => {
+    parts.push( new ToneAPI.Part(( time: any, value: any ) => {
 
         // we use simple envelopes and oscillators instead of the Tonejs synths
         // as they suffer from max polyphony and performance issues on less powerful configurations

@@ -23,7 +23,7 @@
 */
 import { Component } from "react";
 import Composition from "../../model/Composition";
-import { setupCompositionPlayback, play, pause, goToMeasure } from "../../services/AudioService";
+import { setupCompositionPlayback, play, pause, goToMeasure, ensureStarted } from "../../services/AudioService";
 import "./Player.scss";
 
 type PlayerProps = {
@@ -86,7 +86,10 @@ export default class Player extends Component<PlayerProps, PlayerState> {
 
     togglePlayBack( resetPosition: boolean = false ): void {
         if ( !this.state.playing ) {
-            play();
+            // Explicitly unlock AudioContext on the user gesture that triggered
+            // playback – this is important in Electron where the generic body
+            // event listeners in AudioService.init() may not fire reliably.
+            ensureStarted().then(() => play());
         } else {
             pause();
         }

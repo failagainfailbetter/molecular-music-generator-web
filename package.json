@@ -1,7 +1,11 @@
 {
   "name": "molecular-music-generator-web",
   "version": "1.0.0",
+  "description": "Molecular Music Generator – a generative music tool for the web and desktop.",
   "homepage": "./",
+  "private": true,
+  "main": "electron/main.js",
+  "author": "failagainfailbetter",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
@@ -20,7 +24,29 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron-dev": "react-scripts build && electron .",
+    "dist": "react-scripts build && electron-builder"
+  },
+  "build": {
+    "appId": "com.molecularmusicgenerator.app",
+    "productName": "Molecular Music Generator",
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "build/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -41,9 +67,14 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^17.0.0",
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.13",
     "@types/styled-components": "^5.1.24",
-    "typescript": "^4.6.2"
+    "concurrently": "^9.0.0",
+    "electron": "^38.8.6",
+    "electron-builder": "^24.13.3",
+    "typescript": "^4.6.2",
+    "wait-on": "^7.2.0"
   }
 }

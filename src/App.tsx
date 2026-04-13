@@ -89,10 +89,14 @@ function App() {
         generateComposition( composition );
     };
 
-    const downloadMIDI = () => {
+    const downloadMIDI = async () => {
         const fileName = `composition_${getCompositionName( data )}.mid`;
-        saveAsFile( midi, fileName );
-        toast( `MIDI file "${fileName}" generated successfully.` );
+        const savedPath = await saveAsFile( midi, fileName );
+        if ( savedPath ) {
+            toast( `MIDI saved to "${savedPath}".` );
+        } else {
+            toast( `MIDI file "${fileName}" generated successfully.` );
+        }
     };
 
     return (
