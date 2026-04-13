@@ -42,7 +42,10 @@ app.whenReady().then(() => {
     });
 });
 
-// Quit the app when all windows are closed (standard behaviour on Windows/Linux).
+// Quit the app when all windows are closed.
+// On macOS apps conventionally stay open until the user quits explicitly.
 app.on("window-all-closed", () => {
-    app.quit();
+    if (process.platform !== "darwin") {
+        app.quit();
+    }
 });
