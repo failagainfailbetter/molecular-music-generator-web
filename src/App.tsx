@@ -111,7 +111,6 @@ function App() {
 
     const batchExportMIDI = async () => {
         toast( `Generating ${BATCH_COUNT} MIDI variations…` );
-        const baseName = getCompositionName( data );
         let saved = 0;
         for ( let i = 1; i <= BATCH_COUNT; i++ ) {
             const variation = { ...data, scale: shuffleScaleNotes( data.scale ) };
@@ -124,7 +123,7 @@ function App() {
                 continue;
             }
             const index = String( i ).padStart( 2, "0" );
-            const fileName = `${baseName}_v${index}.mid`;
+            const fileName = `${getCompositionName( variation )}_v${index}.mid`;
             await saveAsFile( variationMidi, fileName );
             saved++;
         }
