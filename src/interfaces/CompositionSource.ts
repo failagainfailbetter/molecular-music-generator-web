@@ -1,3 +1,5 @@
+import { CueBuilderSettings } from "./CueBuilderTypes";
+
 /**
  * Describes the input properties to generate
  * a composition.
@@ -17,7 +19,9 @@ export interface CompositionSource {
     patternAmount: number,
     octaveLower: number,
     octaveUpper: number,
-    uniqueTrackPerPattern: boolean
+    uniqueTrackPerPattern: boolean,
+    /** Optional Cue Builder settings; ignored when cueBuilder.enabled is false */
+    cueBuilder?: CueBuilderSettings,
 };
 
 /**
