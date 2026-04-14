@@ -103,6 +103,34 @@
         margin-left: $spacing-small;
     }
 
+    &__container--full-width {
+        width: 100%;
+        padding: 0 $spacing-medium;
+    }
+
+    &__cue-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: $spacing-small;
+        font-size: 90%;
+        color: $color-text;
+
+        th, td {
+            padding: $spacing-xsmall $spacing-small;
+            border: 1px solid $color-3;
+            text-align: center;
+        }
+
+        th {
+            background-color: $color-1;
+            @include customFont();
+        }
+
+        input[type=number] {
+            width: 50px;
+        }
+    }
+
     input[type=text],
     input[type=number] {
         border-radius: $spacing-small;

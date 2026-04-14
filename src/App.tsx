@@ -30,9 +30,11 @@ import Player from "./components/Player/Player";
 import { DEFAULT_COMPOSITION } from "./definitions/samples";
 import { CompositionSource, ScaledCompositionSource } from "./interfaces/CompositionSource";
 import { createComposition } from "./services/CompositionService";
+import { createCueComposition } from "./services/CueBuilderService";
 import { createMIDI } from "./services/MidiService";
 import { saveAsFile } from "./services/FileService";
 import { getCompositionName } from "./utils/StringUtil";
+import { DEFAULT_CUE_SETTINGS } from "./interfaces/CueBuilderTypes";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./App.scss";
@@ -42,9 +44,10 @@ import "./styles/_mixins.scss";
 
 function App() {
 
-    const [ data, setData ] = useState({
+    const [ data, setData ] = useState<ScaledCompositionSource>({
         ...DEFAULT_COMPOSITION,
-        scaleSelect: { note: "C", name: "" }
+        scaleSelect: { note: "C", name: "" },
+        cueBuilder: { ...DEFAULT_CUE_SETTINGS },
     });
 
     const [ hasChanges, setHasChanges ] = useState( true );
@@ -55,7 +58,11 @@ function App() {
 
     const generateComposition = ( optComposition?: CompositionSource ) => {
         try {
-            setComposition( createComposition( optComposition || data ));
+            const source = optComposition || data;
+            const composition = source.cueBuilder?.enabled
+                ? createCueComposition( source )
+                : createComposition( source );
+            setComposition( composition );
             setHasChanges( false );
         } catch ( error ) {
             toast( `Error "${error}" occurred during generation of composition. Please verify input parameters and try again.` );
@@ -116,7 +123,10 @@ function App() {
             const variation = { ...data, scale: shuffleScaleNotes( data.scale ) };
             let variationMidi: string;
             try {
-                const variationComposition = createComposition( variation );
+                const variationSource = { ...variation };
+                const variationComposition = variationSource.cueBuilder?.enabled
+                    ? createCueComposition( variationSource )
+                    : createComposition( variationSource );
                 variationMidi = await createMIDI( variationComposition );
             } catch ( error ) {
                 toast( `Error generating variation ${i}: ${ error instanceof Error ? error.message : String( error ) }` );

@@ -22,6 +22,7 @@
  * SOFTWARE.
 */
 import { ScaledCompositionSource } from "../../interfaces/CompositionSource";
+import { CueBuilderSettings, SectionSettings, DEFAULT_CUE_SETTINGS } from "../../interfaces/CueBuilderTypes";
 import scales from "../../definitions/scales.json";
 import { OCTAVE_SCALE } from "../../utils/PitchUtil";
 import { getCompositionName } from "../../utils/StringUtil";
@@ -37,6 +38,9 @@ const Form = ({ formData, onChange }: FormProps ) => {
 
     const data: ScaledCompositionSource = { ...formData };
 
+    // Ensure cueBuilder is always defined in the local copy
+    const cue: CueBuilderSettings = data.cueBuilder ?? { ...DEFAULT_CUE_SETTINGS };
+
     const asFloat = ( value: string ): number|string => {
         const valueAsFloat = parseFloat( value );
         return isNaN( valueAsFloat ) ? "" : valueAsFloat;
@@ -45,6 +49,23 @@ const Form = ({ formData, onChange }: FormProps ) => {
     const handleChange = ( prop: keyof ScaledCompositionSource, value: any ): void => {
         ( data as any )[ prop ] = value;
         onChange( data );
+    };
+
+    /* ── Cue Builder helpers ── */
+
+    const handleCueChange = ( prop: keyof CueBuilderSettings, value: any ): void => {
+        handleChange( "cueBuilder", { ...cue, [ prop ]: value });
+    };
+
+    const handleSectionChange = (
+        secIdx: number,
+        prop  : keyof SectionSettings,
+        value : any
+    ): void => {
+        const updated = cue.sections.map(( s, i ) =>
+            i === secIdx ? { ...s, [ prop ]: value } : s
+        ) as CueBuilderSettings["sections"];
+        handleCueChange( "sections", updated );
     };
 
     /* scale related operations */
@@ -240,6 +261,115 @@ const Form = ({ formData, onChange }: FormProps ) => {
                         </div>
                     </fieldset>
                 </section>
+            </div>
+            {/* ── Cue Builder panel ── */}
+            <div className="form__container form__container--full-width">
+                <fieldset className="form__fieldset">
+                    <legend>Cue Builder (A/B/C/D)</legend>
+                    <div className="form__wrapper">
+                        <label htmlFor="cue-enabled">Enable Cue Builder mode</label>
+                        <input
+                            id="cue-enabled"
+                            type="checkbox"
+                            checked={ cue.enabled }
+                            onChange={ () => handleCueChange( "enabled", !cue.enabled ) }
+                        />
+                    </div>
+                    { cue.enabled && (
+                        <>
+                            <div className="form__wrapper form__wrapper--padded-top">
+                                <label>Motif length</label>
+                                <select
+                                    value={ cue.motifLength }
+                                    onChange={ e => handleCueChange( "motifLength", parseInt( e.target.value ) as 4 | 6 | 8 ) }
+                                >
+                                    <option value={4}>4 notes</option>
+                                    <option value={6}>6 notes</option>
+                                    <option value={8}>8 notes</option>
+                                </select>
+                            </div>
+                            <div className="form__wrapper">
+                                <label>Contour</label>
+                                <select
+                                    value={ cue.contour }
+                                    onChange={ e => handleCueChange( "contour", e.target.value ) }
+                                >
+                                    <option value="arch">Arch</option>
+                                    <option value="rising">Rising</option>
+                                    <option value="falling">Falling</option>
+                                    <option value="random-walk">Random walk</option>
+                                </select>
+                            </div>
+                            <div className="form__wrapper">
+                                <label>Variation depth ({ cue.variationDepth })</label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={ cue.variationDepth }
+                                    onChange={ e => handleCueChange( "variationDepth", parseInt( e.target.value ) ) }
+                                />
+                            </div>
+                            <div className="form__wrapper">
+                                <label>Phrase length</label>
+                                <select
+                                    value={ cue.phraseLength }
+                                    onChange={ e => handleCueChange( "phraseLength", parseInt( e.target.value ) as 2 | 4 | 8 ) }
+                                >
+                                    <option value={2}>2 bars</option>
+                                    <option value={4}>4 bars</option>
+                                    <option value={8}>8 bars</option>
+                                </select>
+                            </div>
+                            <div className="form__wrapper">
+                                <label>Cadence strength</label>
+                                <select
+                                    value={ cue.cadenceStrength }
+                                    onChange={ e => handleCueChange( "cadenceStrength", e.target.value ) }
+                                >
+                                    <option value="light">Light</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="strong">Strong</option>
+                                </select>
+                            </div>
+                            <p className="form__expl">Section settings: bars per section and intensity (1 = sparse / soft, 5 = dense / loud).</p>
+                            <table className="form__cue-table">
+                                <thead>
+                                    <tr>
+                                        <th>Section</th>
+                                        <th>Bars</th>
+                                        <th>Intensity (1–5)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    { ["A","B","C","D"].map(( label, i ) => (
+                                        <tr key={ label }>
+                                            <td>{ label }</td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="32"
+                                                    value={ cue.sections[ i ].bars }
+                                                    onChange={ e => handleSectionChange( i, "bars", parseInt( e.target.value ) || 1 ) }
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="5"
+                                                    value={ cue.sections[ i ].intensity }
+                                                    onChange={ e => handleSectionChange( i, "intensity", Math.max( 1, Math.min( 5, parseInt( e.target.value ) || 1 ) ) ) }
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </>
+                    )}
+                </fieldset>
             </div>
         </form>
     );
