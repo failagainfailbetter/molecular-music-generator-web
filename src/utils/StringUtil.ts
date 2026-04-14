@@ -1,19 +1,33 @@
-import { CompositionSource } from "../interfaces/CompositionSource";
+import { ScaledCompositionSource } from "../interfaces/CompositionSource";
 
 /**
- * Generate a human-readable name for a composition.
- * Used as the stem of exported MIDI filenames.
- *
- * Named presets:  "<name>_<tempo>bpm"
- * Custom inputs:  "<notes>_<tempo>bpm_<note1Length>-<note2Length>"
- *
- * Notes in the scale are joined with hyphens, e.g. "C-D-Eb-F-G-Ab-Bb".
+ * Sanitize a string so it is safe to use as a filename on Windows and macOS.
+ * Removes characters that are forbidden in Windows filenames and collapses whitespace.
  */
-export const getCompositionName = ( data: CompositionSource ): string => {
-    const notes = data.scale.split( "," ).map( note => note.trim() );
-    const scalePart = notes.join( "-" );
-    if ( data.name ) {
-        return `${data.name}_${data.tempo}bpm`;
-    }
-    return `${scalePart}_${data.tempo}bpm_${data.note1Length}-${data.note2Length}`;
+export const sanitizeFilename = ( name: string ): string =>
+    name.replace( /[/\\:*?"<>|]/g, "" ).replace( /\s+/g, "_" );
+
+/**
+ * Generate a descriptive filename stem for a composition based on root note,
+ * optional scale name, and the exact note order in the scale.
+ *
+ * Format:
+ *   "<root>_<scaleName>_<note-order>"  – when a named scale is selected
+ *   "<root>_<note-order>"              – when no scale name is present
+ *
+ * Examples:
+ *   C_major_C-D-E-F-G-A-B
+ *   F_F-G#-E-A-B-D-C        (after shuffle, no scale name)
+ */
+export const getCompositionName = ( data: ScaledCompositionSource ): string => {
+    const notes = data.scale.split( "," ).map( note => note.trim() ).filter( Boolean );
+    const noteOrder = notes.join( "-" );
+    const root = data.scaleSelect?.note || notes[ 0 ] || "scale";
+    const scaleName = data.scaleSelect?.name;
+
+    const stem = scaleName
+        ? `${root}_${scaleName}_${noteOrder}`
+        : `${root}_${noteOrder}`;
+
+    return sanitizeFilename( stem );
 };

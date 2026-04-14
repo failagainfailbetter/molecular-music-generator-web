@@ -89,13 +89,47 @@ function App() {
         generateComposition( composition );
     };
 
+    const shuffleScaleNotes = ( scale: string ): string =>
+        scale.split( "," )
+            .filter( Boolean )
+            .map( value => ({ value: value.trim(), sort: Math.random() }))
+            .sort(( a, b ) => a.sort - b.sort )
+            .map(({ value }) => value )
+            .join( "," );
+
+    const BATCH_COUNT = 5;
+
     const downloadMIDI = async () => {
-        const fileName = `composition_${getCompositionName( data )}.mid`;
+        const fileName = `${getCompositionName( data )}.mid`;
         const savedPath = await saveAsFile( midi, fileName );
         if ( savedPath ) {
             toast( `MIDI saved to "${savedPath}".` );
         } else {
             toast( `MIDI file "${fileName}" generated successfully.` );
+        }
+    };
+
+    const batchExportMIDI = async () => {
+        toast( `Generating ${BATCH_COUNT} MIDI variations…` );
+        const baseName = getCompositionName( data );
+        let saved = 0;
+        for ( let i = 1; i <= BATCH_COUNT; i++ ) {
+            const variation = { ...data, scale: shuffleScaleNotes( data.scale ) };
+            let variationMidi: string;
+            try {
+                const variationComposition = createComposition( variation );
+                variationMidi = await createMIDI( variationComposition );
+            } catch ( error ) {
+                toast( `Error generating variation ${i}: ${ error instanceof Error ? error.message : String( error ) }` );
+                continue;
+            }
+            const index = String( i ).padStart( 2, "0" );
+            const fileName = `${baseName}_v${index}.mid`;
+            await saveAsFile( variationMidi, fileName );
+            saved++;
+        }
+        if ( saved > 0 ) {
+            toast( `Batch export complete: ${saved} of ${BATCH_COUNT} variations saved.` );
         }
     };
 
@@ -122,6 +156,12 @@ function App() {
                                 disabled={ midi === null }
                                 onClick={ downloadMIDI }
                             >Export MIDI</button>
+                            <button
+                                type="button"
+                                className="app__actions-button"
+                                disabled={ midi === null }
+                                onClick={ batchExportMIDI }
+                            >Batch Export (×5)</button>
                             <Player composition={ composition } />
                         </div>
                     </div>
