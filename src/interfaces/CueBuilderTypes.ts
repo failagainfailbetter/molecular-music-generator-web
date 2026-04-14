@@ -14,7 +14,7 @@ export type CadenceStrength = "light" | "medium" | "strong";
 
 /** Per-section settings (one entry for each of A / B / C / D) */
 export interface SectionSettings {
-    /** Number of bars in this section (2–32) */
+    /** Number of bars in this section (1–32) */
     bars: number;
     /** Density / register / velocity driver (1 = sparse, 5 = dense/high) */
     intensity: number;

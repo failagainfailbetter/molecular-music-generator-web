@@ -263,7 +263,7 @@ const Form = ({ formData, onChange }: FormProps ) => {
                 </section>
             </div>
             {/* ── Cue Builder panel ── */}
-            <div className="form__container form__container--full">
+            <div className="form__container form__container--full-width">
                 <fieldset className="form__fieldset">
                     <legend>Cue Builder (A/B/C/D)</legend>
                     <div className="form__wrapper">
@@ -349,7 +349,7 @@ const Form = ({ formData, onChange }: FormProps ) => {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    max="64"
+                                                    max="32"
                                                     value={ cue.sections[ i ].bars }
                                                     onChange={ e => handleSectionChange( i, "bars", parseInt( e.target.value ) || 1 ) }
                                                 />
